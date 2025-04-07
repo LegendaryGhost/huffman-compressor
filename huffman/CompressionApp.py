@@ -70,8 +70,10 @@ class CompressionApp(ttk.Window):
         try:
             frequency_list = Huffman.count_characters(filepath)
             tree_root = Huffman.make_tree(frequency_list)
-            print("Huffman tree:")
-            tree_root.print_tree()
+            code_dictionary = Huffman.tree_to_dict(tree_root)
+            print("Encodings:")
+            for letter, code in code_dictionary.items():
+                print(letter + ": " + code)
 
             compressed_filepath = filepath + ".huff"
 

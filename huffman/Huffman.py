@@ -54,3 +54,30 @@ class Huffman:
 
         # Step 3: The last remaining node is the root of the Huffman tree.
         return nodes[0]
+
+    @staticmethod
+    def traverse(code_dict, node, code_str = ""):
+        # If the node is a leaf (has a letter), store its code.
+        if node.letter is not None:
+            code_dict[node.letter] = code_str
+        else:
+            # Traverse the left child, appending "0" to the code.
+            if node.left:
+                Huffman.traverse(code_dict, node.left, code_str + "0")
+            # Traverse the right child, appending "1" to the code.
+            if node.right:
+                Huffman.traverse(code_dict, node.right, code_str + "1")
+
+    @staticmethod
+    def tree_to_dict(root):
+        """
+        Traverse the Huffman tree to create a dictionary mapping each letter to its binary encoding.
+        For each left branch, add '0' to the encoding; for each right branch, add '1'.
+
+        :param root: The root Node of the Huffman tree.
+        :return: A dictionary mapping letters to their binary Huffman codes.
+        """
+        code_dict = {}
+
+        Huffman.traverse(code_dict, root)
+        return code_dict
