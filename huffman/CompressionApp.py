@@ -68,18 +68,14 @@ class CompressionApp(ttk.Window):
             return
 
         try:
-            frequency_list = Huffman.count_characters(filepath)
-            tree_root = Huffman.make_tree(frequency_list)
-            code_dictionary = Huffman.tree_to_dict(tree_root)
-            print("Encodings:")
-            for letter, code in code_dictionary.items():
-                print(letter + ": " + code)
-
             compressed_filepath = filepath + ".huff"
+            dictionary_filepath = filepath + ".json"
+
+            Huffman.compress(filepath, compressed_filepath, dictionary_filepath)
 
             # Inform the user of the successful compression.
             self.status_label.config(
-                text=f"File compressed successfully:\n{compressed_filepath}",
+                text=f"File compressed successfully:\n{compressed_filepath}.\nThe dictionary was saved here:\n{dictionary_filepath}.",
                 bootstyle="success"
             )
         except Exception as e:
