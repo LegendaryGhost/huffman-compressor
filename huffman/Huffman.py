@@ -142,3 +142,56 @@ class Huffman:
         # 7. Save the encoding dictionary as a JSON file.
         with open(dictionary_filename, "w") as df:
             json.dump(code_dict, df, indent=4)
+
+    @staticmethod
+    def decode(compressed_filename, dictionary_filename, output_filename):
+        """
+        Decodes a compressed binary file using the corresponding encoding dictionary.
+
+        Steps:
+          1. Load the encoding dictionary from the JSON file and reverse it (code -> letter).
+          2. Read the compressed binary file:
+             - The first byte is a header indicating the number of valid bits in the final byte.
+             - The rest of the file is the packed encoded data.
+          3. Convert each byte to its binary string. For the last byte, only use the number of valid bits.
+          4. Traverse the bit string and decode it using the reverse dictionary.
+          5. Write the decoded text to the output file.
+
+        :param compressed_filename: Path to the compressed binary file.
+        :param dictionary_filename: Path to the JSON file with the encoding dictionary.
+        :param output_filename: Path for the output decoded text file.
+        """
+        # 1. Load and reverse the encoding dictionary.
+        with open(dictionary_filename, "r") as df:
+            code_dict = json.load(df)
+        reverse_dict = {v: k for k, v in code_dict.items()}
+
+        # 2. Read the compressed binary file.
+        with open(compressed_filename, "rb") as bf:
+            # First byte is the header (number of valid bits in the final byte).
+            valid_bits = int.from_bytes(bf.read(1), byteorder="big")
+            data = bf.read()
+
+        # 3. Convert the byte data into a bit string.
+        encoded_str = ""
+        if len(data) > 0:
+            # Process all full bytes.
+            for i in range(len(data) - 1):
+                encoded_str += format(data[i], "08b")
+            # Process the last byte using only the valid bits.
+            last_byte = data[-1]
+            last_bits = format(last_byte, "08b")[:valid_bits]
+            encoded_str += last_bits
+
+        # 4. Decode the bit string.
+        decoded_text = ""
+        current_code = ""
+        for bit in encoded_str:
+            current_code += bit
+            if current_code in reverse_dict:
+                decoded_text += reverse_dict[current_code]
+                current_code = ""
+
+        # 5. Write the decoded text to the output file.
+        with open(output_filename, "w") as out_f:
+            out_f.write(decoded_text)
