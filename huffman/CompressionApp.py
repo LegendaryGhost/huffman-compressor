@@ -313,9 +313,18 @@ class CompressionApp(ttk.Window):
             self.extract_pixels_var.set(filename)
 
     def extract_message(self):
-        # Placeholder function for extracting the hidden message using steganography.
-        # Implement the extraction logic here.
-        self.extract_status_label.config(text="Extract message functionality is not implemented yet.", bootstyle="info")
+        try:
+            # Call the extract function with the image path and pixel indices file.
+            hidden_message = Steganography.extract_message_from_image(
+                png_image_file_path=self.extract_image_var.get(),
+                pixel_numbers_file_path=self.extract_pixels_var.get()
+            )
+            # Display the hidden message in the entry widget.
+            self.hidden_message_text.delete(0, 'end')
+            self.hidden_message_text.insert(0, hidden_message)
+            self.extract_status_label.config(text="Message extracted successfully.", bootstyle="success")
+        except Exception as e:
+            self.extract_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
 
 
 if __name__ == "__main__":
