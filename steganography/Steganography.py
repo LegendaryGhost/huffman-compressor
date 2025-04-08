@@ -22,15 +22,20 @@ class Steganography:
                               output_image_path: str, pixel_numbers_file_path: str):
         """
         Hides the secret message in the PNG image by modifying the least significant
-        bit (LSB) of each of the selected pixels in the image.
+        bit (LSB) of the grayscale value (luminance) for each of the selected pixels.
+        The output image keeps its original colors, only adjusted slightly to reflect
+        the modified grayscale values.
 
         Steps:
         - Convert the secret message into a binary string.
-        - Open the image (in grayscale mode) using Pillow.
-        - Create a list of pixel indices that will be used for storing the message (first pixels).
-        - Loop over these pixels and replace the LSB of each pixel with a bit from the binary message.
-        - Output the new image with the hidden secret message.
-        - Save the pixel numbers used in a file.
+        - Open the image in RGB mode.
+        - For each pixel selected (here, the first pixels up to the length of the binary message):
+            - Compute its grayscale value using the luminance formula (0.299R + 0.587G + 0.114B).
+            - Modify the LSB of the grayscale value to store the corresponding bit.
+            - Calculate the difference (delta) between the new and old grayscale value.
+            - Adjust the original pixel channels by the delta (with clamping to keep values in 0–255).
+        - Save the new image.
+        - Save the list of pixel indices used in a file.
 
         Args:
             png_image_file_path (str): Path to the input PNG image file.
@@ -38,34 +43,42 @@ class Steganography:
             output_image_path (str): Path to save the modified output image.
             pixel_numbers_file_path (str): Path to save the list of pixel numbers used.
         """
-        # Convert secret message to binary
+        # Convert the secret message to binary.
         binary_text = Steganography.text_to_binary(secret_message)
         binary_length = len(binary_text)
 
-        # Open the image and convert to grayscale
-        img = Image.open(png_image_file_path)
-        img = img.convert("L")
-
-        # Get image pixels in a list
+        # Open the image in RGB mode.
+        img = Image.open(png_image_file_path).convert("RGB")
         pixels = list(img.getdata())
         if binary_length > len(pixels):
             raise ValueError("Secret message is too long to hide in this image.")
 
-        # For now, select the first binary_length pixels
+        # For now, select the first binary_length pixels.
         pixel_numbers = list(range(binary_length))
 
-        # Modify the LSB of each pixel using the corresponding bit from binary_text
+        # Duplicate the pixel list for modifications.
+        new_pixels = list(pixels)
         for idx, bit in zip(pixel_numbers, binary_text):
-            old_pixel = pixels[idx]
-            # Replace the least significant bit with the bit from the message
-            new_pixel = (old_pixel & ~1) | int(bit)
-            pixels[idx] = new_pixel
+            r, g, b = pixels[idx]
+            # Compute the grayscale (luminance) of the pixel.
+            old_lum = int(0.299 * r + 0.587 * g + 0.114 * b)
+            # Replace the LSB of the grayscale value with the secret bit.
+            new_lum = (old_lum & ~1) | int(bit)
+            # Calculate the small difference: the change is only -1, 0, or +1.
+            delta = new_lum - old_lum
 
-        # Create a new image with modified pixel data and save it
-        new_img = Image.new("L", img.size)
-        new_img.putdata(pixels)
+            # Adjust each channel by the delta, ensuring values remain within [0, 255].
+            new_r = max(0, min(255, r + delta))
+            new_g = max(0, min(255, g + delta))
+            new_b = max(0, min(255, b + delta))
+
+            new_pixels[idx] = (new_r, new_g, new_b)
+
+        # Create a new RGB image with the modified pixels and save it.
+        new_img = Image.new("RGB", img.size)
+        new_img.putdata(new_pixels)
         new_img.save(output_image_path)
 
-        # Save the list of used pixel indices into a file
+        # Save the list of used pixel indices into the specified file.
         with open(pixel_numbers_file_path, "w") as f:
             f.write(','.join(str(n) for n in pixel_numbers))
