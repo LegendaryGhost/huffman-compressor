@@ -5,6 +5,7 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
 from huffman.Huffman import Huffman
+from steganography.Steganography import Steganography
 
 
 class CompressionApp(ttk.Window):
@@ -247,8 +248,10 @@ class CompressionApp(ttk.Window):
             self.out_pixels_var.set(filename)
 
     def hide_message(self):
-        # Placeholder function for hiding the message using steganography.
-        # Implement the steganography logic here.
+        text_to_hide = self.stego_text_message.get()
+        binary_text = Steganography.text_to_binary(text_to_hide)
+        print(f"{text_to_hide} -> {binary_text}")
+
         self.hide_status_label.config(text="Hide message functionality is not implemented yet.", bootstyle="info")
 
     # --------------- Steganography Extract Tab ---------------
