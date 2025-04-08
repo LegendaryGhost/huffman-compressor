@@ -248,11 +248,17 @@ class CompressionApp(ttk.Window):
             self.out_pixels_var.set(filename)
 
     def hide_message(self):
-        text_to_hide = self.stego_text_message.get()
-        binary_text = Steganography.text_to_binary(text_to_hide)
-        print(f"{text_to_hide} -> {binary_text}")
-
-        self.hide_status_label.config(text="Hide message functionality is not implemented yet.", bootstyle="info")
+        try:
+            # Call the function to hide the message in the image
+            Steganography.hide_message_in_image(
+                png_image_file_path=self.stego_image_var.get(),
+                secret_message=self.stego_text_message.get(),
+                output_image_path=self.out_stego_image_var.get(),
+                pixel_numbers_file_path=self.out_pixels_var.get()
+            )
+            self.hide_status_label.config(text="Message hidden successfully.", bootstyle="success")
+        except Exception as e:
+            self.hide_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
 
     # --------------- Steganography Extract Tab ---------------
     def build_steganography_extract_form(self):
