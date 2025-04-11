@@ -24,25 +24,24 @@ class Steganography:
         Hides the secret message in the PNG image by modifying the least
         significant bit (LSB) of each red channel byte.
 
-        New steps:
+        Steps:
          - Convert the secret message into an 8-bit binary string.
-         - Open the image in RGB mode.
-         - For each pixel (here, the first pixels up to the length of the binary message):
-             - Get its red channel value (a number 0–255).
-             - Replace the least significant bit (LSB) of that value with the corresponding secret bit.
-         - Save the new RGB image.
+         - Open the image in its original mode (RGB or RGBA).
+         - For each selected pixel (the first pixels up to the length of the binary message):
+             - Get its red channel value (the first element of the pixel tuple).
+             - Replace the LSB of that value with the corresponding secret bit.
+             - Reconstruct the pixel tuple with the modified red channel and original other channels.
+         - Save the new image in the original mode.
          - Save the list of pixel indices used in a file.
         """
-
-        # Convert the secret message to binary.
+        # Convert the secret message to binary
         binary_text = Steganography.text_to_binary(secret_message)
         binary_length = len(binary_text)
 
-        # Open the image in its original mode (e.g., RGB)
+        # Open the image in its original mode
         img = Image.open(png_image_file_path)
-        print(f"Image mode: {img.mode}")
-        if img.mode != "RGB":
-            raise ValueError("Image must be in RGB mode for this implementation.")
+        if img.mode not in ("RGB", "RGBA"):
+            raise ValueError("Image must be in RGB or RGBA mode.")
         pixels = list(img.getdata())
         if binary_length > len(pixels):
             raise ValueError("Secret message is too long to hide in this image.")
@@ -53,10 +52,12 @@ class Steganography:
         # Modify the LSB of the red channel for each selected pixel
         new_pixels = list(pixels)
         for idx, bit in zip(pixel_numbers, binary_text):
-            r, g, b = pixels[idx]
+            pixel = pixels[idx]  # Get the pixel tuple (RGB: (r, g, b) or RGBA: (r, g, b, a))
+            r = pixel[0]  # Red channel is always the first element
             # Set the LSB of the red channel to the secret bit
             new_r = (r & ~1) | int(bit)
-            new_pixels[idx] = (new_r, g, b)
+            # Reconstruct the pixel with the modified red channel and original other channels
+            new_pixels[idx] = (new_r,) + pixel[1:]
 
         # Create a new image with the same mode and save it
         new_img = Image.new(img.mode, img.size)
@@ -77,18 +78,17 @@ class Steganography:
     @staticmethod
     def extract_message_from_image(png_image_file_path: str, pixel_numbers_file_path: str) -> str:
         """
-        Extracts a hidden message from an RGB PNG image by reading the least
-        significant bit (LSB) of the specified pixel values.
+        Extracts a hidden message from a PNG image by reading the least
+        significant bit (LSB) of the specified pixel red channel values.
 
         Steps:
          - Read the list of pixel indices from the pixel numbers file.
-         - Open the image in RGB mode.
+         - Open the image in its original mode (RGB or RGBA).
          - For each pixel index in the list:
-             - Get the pixel's red channel value (0–255).
+             - Get the pixel's red channel value (first element of the tuple).
              - Extract the LSB.
          - Reconstruct the binary message and convert it back to text.
         """
-
         # Read the pixel indices
         with open(pixel_numbers_file_path, "r") as f:
             content = f.read().strip()
@@ -98,15 +98,16 @@ class Steganography:
 
         # Open the image in its original mode
         img = Image.open(png_image_file_path)
-        if img.mode != "RGB":
-            raise ValueError("Image must be in RGB mode for this implementation.")
+        if img.mode not in ("RGB", "RGBA"):
+            raise ValueError("Image must be in RGB or RGBA mode.")
         pixels = list(img.getdata())
 
         # Extract the LSB from the red channel of each specified pixel
         binary_message = ""
         for idx in pixel_numbers:
-            r, g, b = pixels[idx]
-            bit = r & 1
+            pixel = pixels[idx]  # Get the pixel tuple
+            r = pixel[0]  # Red channel is the first element
+            bit = r & 1  # Extract the LSB
             binary_message += str(bit)
 
         return Steganography.binary_to_text(binary_message)
