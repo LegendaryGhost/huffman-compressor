@@ -12,24 +12,24 @@ class CompressionApp(ttk.Window):
     def __init__(self, *args, **kwargs):
         # Initialize the window with a modern theme.
         super().__init__(themename="litera", *args, **kwargs)
-        self.title("Huffman Compressor / Decompressor / Steganography")
-        self.geometry("600x600")  # Increased height to accommodate more tabs
+        self.title("Huffman encoding / Steganography")
+        self.geometry("800x600")
 
         # Use a Notebook widget to create multiple tabs.
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill='both', expand=True)
 
-        # Build the Compression form.
+        # Huffman compression UI
         self.build_compression_form()
-
-        # Build the Decompression form.
         self.build_decompression_form()
 
-        # Build the Steganography Hide form.
+        # Image steganography UI
         self.build_steganography_hide_form()
-
-        # Build the Steganography Extract form.
         self.build_steganography_extract_form()
+
+        # Audio steganography UI
+        self.build_audio_steganography_hide_form()
+        # self.build_audio_steganography_extract_form()
 
     # --------------- Compression Tab ---------------
     def build_compression_form(self):
@@ -221,7 +221,7 @@ class CompressionApp(ttk.Window):
 
         # Submit button.
         self.hide_submit_button = ttk.Button(
-            self.hide_frame, text="Hide Message", bootstyle=SUCCESS, command=self.hide_message
+            self.hide_frame, text="Hide Message", bootstyle=SUCCESS, command=self.hide_message_in_image
         )
         self.hide_submit_button.grid(row=4, column=1, pady=10)
 
@@ -247,7 +247,7 @@ class CompressionApp(ttk.Window):
         if filename:
             self.out_pixels_var.set(filename)
 
-    def hide_message(self):
+    def hide_message_in_image(self):
         try:
             # Call the function to hide the message in the image
             Steganography.hide_message_in_image(
@@ -326,6 +326,80 @@ class CompressionApp(ttk.Window):
         except Exception as e:
             self.extract_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
 
+    # --------------- Audio Steganography Hide Tab ---------------
+    def build_audio_steganography_hide_form(self):
+        self.audio_hide_frame = ttk.Frame(self.notebook, padding=20)
+        self.notebook.add(self.audio_hide_frame, text="Steganography (audio) - Hide")
+
+        # WAV audio file selection.
+        ttk.Label(self.audio_hide_frame, text="Select WAV Image File:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
+        self.stego_audio_var = ttk.StringVar()
+        self.stego_audio_entry = ttk.Entry(self.audio_hide_frame, textvariable=self.stego_image_var, width=40)
+        self.stego_audio_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.browse_stego_audio_button = ttk.Button(
+            self.audio_hide_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_stego_audio
+        )
+        self.browse_stego_audio_button.grid(row=0, column=2, padx=5, pady=5)
+
+        # Text message input.
+        ttk.Label(self.audio_hide_frame, text="Text Message to Hide:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
+        self.audio_stego_text_message = ttk.Entry(self.audio_hide_frame, width=53)
+        self.audio_stego_text_message.grid(row=1, column=1, padx=5, pady=5, columnspan=2)
+
+        # Output file for the new audio.
+        ttk.Label(self.audio_hide_frame, text="Output Audio File:").grid(row=2, column=0, sticky='w', padx=5, pady=5)
+        self.out_stego_audio_var = ttk.StringVar()
+        self.out_stego_audio_entry = ttk.Entry(self.audio_hide_frame, textvariable=self.out_stego_audio_var, width=40)
+        self.out_stego_audio_entry.grid(row=2, column=1, padx=5, pady=5)
+        self.browse_out_stego_audio_button = ttk.Button(
+            self.audio_hide_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_out_stego_audio
+        )
+        self.browse_out_stego_audio_button.grid(row=2, column=2, padx=5, pady=5)
+
+        # Output file for the pixel numbers.
+        ttk.Label(self.audio_hide_frame, text="Output Sample Numbers File:").grid(row=3, column=0, sticky='w', padx=5, pady=5)
+        self.audio_out_samples_var = ttk.StringVar()
+        self.audio_out_samples_entry = ttk.Entry(self.audio_hide_frame, textvariable=self.audio_out_samples_var, width=40)
+        self.audio_out_samples_entry.grid(row=3, column=1, padx=5, pady=5)
+        self.audio_browse_out_pixels_button = ttk.Button(
+            self.audio_hide_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_out_pixels
+        )
+        self.audio_browse_out_pixels_button.grid(row=3, column=2, padx=5, pady=5)
+
+        # Submit button.
+        self.audio_hide_submit_button = ttk.Button(
+            self.audio_hide_frame, text="Hide Message", bootstyle=SUCCESS, command=self.hide_message_in_audio
+        )
+        self.audio_hide_submit_button.grid(row=4, column=1, pady=10)
+
+        # Status label.
+        self.audio_hide_status_label = ttk.Label(self.audio_hide_frame, text="")
+        self.audio_hide_status_label.grid(row=5, column=0, columnspan=3, pady=5)
+
+    def browse_stego_audio(self):
+        filetypes = (("WAV files", "*.wav"), ("All files", "*.*"))
+        filename = fd.askopenfilename(title="Select WAV Audio File", initialdir=os.getcwd(), filetypes=filetypes)
+        if filename:
+            self.stego_audio_var.set(filename)
+
+    def browse_out_stego_audio(self):
+        filename = fd.asksaveasfilename(title="Output Audio File", initialdir=os.getcwd(),
+                                         defaultextension=".wav", filetypes=(("WAV files", "*.png"), ("All files", "*.*")))
+        if filename:
+            self.out_stego_audio_var.set(filename)
+
+    def hide_message_in_audio(self):
+        try:
+            # Call the function to hide the message in the audio
+            Steganography.hide_message_in_image(
+                png_image_file_path=self.stego_image_var.get(),
+                secret_message=self.stego_text_message.get(),
+                output_image_path=self.out_stego_image_var.get(),
+                pixel_numbers_file_path=self.out_pixels_var.get()
+            )
+            self.audio_hide_status_label.config(text="Message hidden successfully.", bootstyle="success")
+        except Exception as e:
+            self.audio_hide_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
 
 if __name__ == "__main__":
     app = CompressionApp()

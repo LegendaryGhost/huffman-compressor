@@ -18,6 +18,13 @@ class Steganography:
         return ''.join(format(ord(char), '08b') for char in text)
 
     @staticmethod
+    def binary_to_text(binary_str: str) -> str:
+        """
+        Converts a binary string (assumed to be in 8-bit chunks) back into text.
+        """
+        return ''.join(chr(int(binary_str[i:i + 8], 2)) for i in range(0, len(binary_str), 8))
+
+    @staticmethod
     def hide_message_in_image(png_image_file_path: str, secret_message: str,
                               output_image_path: str, pixel_numbers_file_path: str):
         """
@@ -67,13 +74,6 @@ class Steganography:
         # Save the pixel indices
         with open(pixel_numbers_file_path, "w") as f:
             f.write(','.join(str(n) for n in pixel_numbers))
-
-    @staticmethod
-    def binary_to_text(binary_str: str) -> str:
-        """
-        Converts a binary string (assumed to be in 8-bit chunks) back into text.
-        """
-        return ''.join(chr(int(binary_str[i:i + 8], 2)) for i in range(0, len(binary_str), 8))
 
     @staticmethod
     def extract_message_from_image(png_image_file_path: str, pixel_numbers_file_path: str) -> str:
