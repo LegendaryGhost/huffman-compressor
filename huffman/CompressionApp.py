@@ -29,7 +29,7 @@ class CompressionApp(ttk.Window):
 
         # Audio steganography UI
         self.build_audio_steganography_hide_form()
-        # self.build_audio_steganography_extract_form()
+        self.build_audio_steganography_extract_form()
 
     # --------------- Compression Tab ---------------
     def build_compression_form(self):
@@ -292,7 +292,7 @@ class CompressionApp(ttk.Window):
 
         # Submit button.
         self.extract_submit_button = ttk.Button(
-            self.extract_frame, text="Extract Message", bootstyle=SUCCESS, command=self.extract_message
+            self.extract_frame, text="Extract Message", bootstyle=SUCCESS, command=self.extract_message_from_image
         )
         self.extract_submit_button.grid(row=3, column=1, pady=10)
 
@@ -312,7 +312,7 @@ class CompressionApp(ttk.Window):
         if filename:
             self.extract_pixels_var.set(filename)
 
-    def extract_message(self):
+    def extract_message_from_image(self):
         try:
             # Call the extract function with the image path and pixel indices file.
             hidden_message = Steganography.extract_message_from_image(
@@ -389,6 +389,7 @@ class CompressionApp(ttk.Window):
             self.out_stego_audio_var.set(filename)
 
     def hide_message_in_audio(self):
+        # TODO: replace with the audio function call
         try:
             # Call the function to hide the message in the audio
             Steganography.hide_message_in_image(
@@ -400,6 +401,73 @@ class CompressionApp(ttk.Window):
             self.audio_hide_status_label.config(text="Message hidden successfully.", bootstyle="success")
         except Exception as e:
             self.audio_hide_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
+
+    # --------------- Audio Steganography Extract Tab ---------------
+    def build_audio_steganography_extract_form(self):
+        self.audio_extract_frame = ttk.Frame(self.notebook, padding=20)
+        self.notebook.add(self.audio_extract_frame, text="Steganography (audio) - Extract")
+
+        # WAV audio file selection.
+        ttk.Label(self.audio_extract_frame, text="Select WAV Audio File:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
+        self.extract_audio_var = ttk.StringVar()
+        self.extract_audio_entry = ttk.Entry(self.audio_extract_frame, textvariable=self.extract_audio_var, width=40)
+        self.extract_audio_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.browse_extract_audio_button = ttk.Button(
+            self.audio_extract_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_extract_audio
+        )
+        self.browse_extract_audio_button.grid(row=0, column=2, padx=5, pady=5)
+
+        # Sample numbers file selection.
+        ttk.Label(self.audio_extract_frame, text="Sample Numbers File:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
+        self.extract_samples_var = ttk.StringVar()
+        self.extract_samples_entry = ttk.Entry(self.audio_extract_frame, textvariable=self.extract_samples_var, width=40)
+        self.extract_samples_entry.grid(row=1, column=1, padx=5, pady=5)
+        self.browse_extract_samples_button = ttk.Button(
+            self.audio_extract_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_extract_samples
+        )
+        self.browse_extract_samples_button.grid(row=1, column=2, padx=5, pady=5)
+
+        # Hidden message output.
+        ttk.Label(self.audio_extract_frame, text="Hidden Message:").grid(row=2, column=0, sticky='w', padx=5, pady=5)
+        self.audio_hidden_message_text = ttk.Entry(self.audio_extract_frame, width=53)
+        self.audio_hidden_message_text.grid(row=2, column=1, padx=5, pady=5, columnspan=2)
+
+        # Submit button.
+        self.audio_extract_submit_button = ttk.Button(
+            self.audio_extract_frame, text="Extract Message", bootstyle=SUCCESS, command=self.extract_message_from_audio
+        )
+        self.audio_extract_submit_button.grid(row=3, column=1, pady=10)
+
+        # Status label.
+        self.audio_extract_status_label = ttk.Label(self.audio_extract_frame, text="")
+        self.audio_extract_status_label.grid(row=4, column=0, columnspan=3, pady=5)
+
+    def browse_extract_audio(self):
+        filetypes = (("WAV files", "*.wav"), ("All files", "*.*"))
+        filename = fd.askopenfilename(title="Select WAV Audio File", initialdir=os.getcwd(), filetypes=filetypes)
+        if filename:
+            self.extract_image_var.set(filename)
+
+    def browse_extract_samples(self):
+        filetypes = (("Text files", "*.txt"), ("All files", "*.*"))
+        filename = fd.askopenfilename(title="Select Sample Numbers File", initialdir=os.getcwd(), filetypes=filetypes)
+        if filename:
+            self.extract_pixels_var.set(filename)
+
+    def extract_message_from_audio(self):
+        # TODO: replace with the audio function call
+        try:
+            # Call the extract function with the image path and pixel indices file.
+            hidden_message = Steganography.extract_message_from_image(
+                png_image_file_path=self.extract_image_var.get(),
+                pixel_numbers_file_path=self.extract_pixels_var.get()
+            )
+            # Display the hidden message in the entry widget.
+            self.hidden_message_text.delete(0, 'end')
+            self.hidden_message_text.insert(0, hidden_message)
+            self.extract_status_label.config(text="Message extracted successfully.", bootstyle="success")
+        except Exception as e:
+            self.extract_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
 
 if __name__ == "__main__":
     app = CompressionApp()
