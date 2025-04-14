@@ -334,7 +334,7 @@ class CompressionApp(ttk.Window):
         # WAV audio file selection.
         ttk.Label(self.audio_hide_frame, text="Select WAV Image File:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
         self.stego_audio_var = ttk.StringVar()
-        self.stego_audio_entry = ttk.Entry(self.audio_hide_frame, textvariable=self.stego_image_var, width=40)
+        self.stego_audio_entry = ttk.Entry(self.audio_hide_frame, textvariable=self.stego_audio_var, width=40)
         self.stego_audio_entry.grid(row=0, column=1, padx=5, pady=5)
         self.browse_stego_audio_button = ttk.Button(
             self.audio_hide_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_stego_audio
@@ -362,7 +362,7 @@ class CompressionApp(ttk.Window):
         self.audio_out_samples_entry = ttk.Entry(self.audio_hide_frame, textvariable=self.audio_out_samples_var, width=40)
         self.audio_out_samples_entry.grid(row=3, column=1, padx=5, pady=5)
         self.audio_browse_out_pixels_button = ttk.Button(
-            self.audio_hide_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_out_pixels
+            self.audio_hide_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_out_samples
         )
         self.audio_browse_out_pixels_button.grid(row=3, column=2, padx=5, pady=5)
 
@@ -384,19 +384,24 @@ class CompressionApp(ttk.Window):
 
     def browse_out_stego_audio(self):
         filename = fd.asksaveasfilename(title="Output Audio File", initialdir=os.getcwd(),
-                                         defaultextension=".wav", filetypes=(("WAV files", "*.png"), ("All files", "*.*")))
+                                         defaultextension=".wav", filetypes=(("WAV files", "*.wav"), ("All files", "*.*")))
         if filename:
             self.out_stego_audio_var.set(filename)
 
+    def browse_out_samples(self):
+        filename = fd.asksaveasfilename(title="Output Sample Numbers File", initialdir=os.getcwd(),
+                                         defaultextension=".txt", filetypes=(("Text files", "*.txt"), ("All files", "*.*")))
+        if filename:
+            self.audio_out_samples_var.set(filename)
+
     def hide_message_in_audio(self):
-        # TODO: replace with the audio function call
         try:
             # Call the function to hide the message in the audio
-            Steganography.hide_message_in_image(
-                png_image_file_path=self.stego_image_var.get(),
-                secret_message=self.stego_text_message.get(),
-                output_image_path=self.out_stego_image_var.get(),
-                pixel_numbers_file_path=self.out_pixels_var.get()
+            Steganography.hide_message_in_audio(
+                wav_audio_file_path=self.stego_audio_var.get(),
+                secret_message=self.audio_stego_text_message.get(),
+                output_audio_file_path=self.out_stego_audio_var.get(),
+                sample_numbers_file_path=self.audio_out_samples_var.get()
             )
             self.audio_hide_status_label.config(text="Message hidden successfully.", bootstyle="success")
         except Exception as e:
@@ -446,28 +451,27 @@ class CompressionApp(ttk.Window):
         filetypes = (("WAV files", "*.wav"), ("All files", "*.*"))
         filename = fd.askopenfilename(title="Select WAV Audio File", initialdir=os.getcwd(), filetypes=filetypes)
         if filename:
-            self.extract_image_var.set(filename)
+            self.extract_audio_var.set(filename)
 
     def browse_extract_samples(self):
         filetypes = (("Text files", "*.txt"), ("All files", "*.*"))
         filename = fd.askopenfilename(title="Select Sample Numbers File", initialdir=os.getcwd(), filetypes=filetypes)
         if filename:
-            self.extract_pixels_var.set(filename)
+            self.extract_samples_var.set(filename)
 
     def extract_message_from_audio(self):
-        # TODO: replace with the audio function call
         try:
-            # Call the extract function with the image path and pixel indices file.
-            hidden_message = Steganography.extract_message_from_image(
-                png_image_file_path=self.extract_image_var.get(),
-                pixel_numbers_file_path=self.extract_pixels_var.get()
+            # Call the extract function with the audio path and samples indices file.
+            hidden_message = Steganography.extract_message_from_audio(
+                wav_audio_file_path=self.extract_audio_var.get(),
+                sample_numbers_file_path=self.extract_samples_var.get()
             )
             # Display the hidden message in the entry widget.
-            self.hidden_message_text.delete(0, 'end')
-            self.hidden_message_text.insert(0, hidden_message)
-            self.extract_status_label.config(text="Message extracted successfully.", bootstyle="success")
+            self.audio_hidden_message_text.delete(0, 'end')
+            self.audio_hidden_message_text.insert(0, hidden_message)
+            self.audio_extract_status_label.config(text="Message extracted successfully.", bootstyle="success")
         except Exception as e:
-            self.extract_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
+            self.audio_extract_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
 
 if __name__ == "__main__":
     app = CompressionApp()
