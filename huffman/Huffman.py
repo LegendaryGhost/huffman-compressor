@@ -5,19 +5,20 @@ from huffman.Node import Node
 
 class Huffman:
     @staticmethod
-    def count_characters(file_path):
+    def count_characters(text):
         """
-        Reads the text file at file_path and counts the frequency of each letter (ignoring case).
-        Returns a list of (letter, count) tuples sorted in ascending order by count.
+        Reads the text file at file_path and counts the frequency of each letter (a-z) and spacess.
+        sReturns a list of (character, count) tuples sorted in ascending order by count,
+        then by character.
         """
         counts = {}
-        # Open the file and read its contents
-        with open(file_path, 'r') as f:
-            text = f.read()
-            for ch in text:
+        allowed = set("abcdefghijklmnopqrstuvwxyz ")
+
+        for ch in text:
+            if ch in allowed:
                 counts[ch] = counts.get(ch, 0) + 1
 
-        # Create a list of tuples and sort it by count (and letter as secondary sort)
+        # Create a list of tuples and sort it by count, then by character
         return sorted(counts.items(), key=lambda x: (x[1], x[0]))
 
     @staticmethod
@@ -95,8 +96,14 @@ class Huffman:
         :param compressed_filename: Path for the output compressed binary file.
         :param dictionary_filename: Path for the output encoding dictionary (JSON file).
         """
+
+        # 0. Read the file's content in lower case to make it case insensitive
+        text = ""
+        with open(file_path, 'r') as f:
+            text = f.read().lower()
+
         # 1. Count frequencies and build a sorted list.
-        sorted_counts = Huffman.count_characters(file_path)
+        sorted_counts = Huffman.count_characters(text)
 
         # 2. Build the Huffman tree.
         root = Huffman.make_tree(sorted_counts)
@@ -104,14 +111,12 @@ class Huffman:
         # 3. Get the encoding dictionary.
         code_dict = Huffman.tree_to_dict(root)
 
-        # 4. Read the original file and build the encoded bit string.
+        # 4. Build the encoded bit string.
         encoded_str = ""
-        with open(file_path, 'r') as f:
-            text = f.read()
-            for ch in text:
-                if ch in code_dict:
-                    encoded_str += code_dict[ch]
-                # You may choose to handle characters not present in code_dict here.
+        for ch in text:
+            if ch in code_dict:
+                encoded_str += code_dict[ch]
+            # You may choose to handle characters not present in code_dict here.
 
         # 5. Pack the bit string into bytes WITHOUT extra padding.
         # Determine how many full bytes we have and the number of valid bits in the last byte.
