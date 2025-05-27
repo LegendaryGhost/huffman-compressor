@@ -6,6 +6,7 @@ from ttkbootstrap.constants import *
 
 from huffman.Huffman import Huffman
 from steganography.Steganography import Steganography
+from evaluator.LanguageEvaluator import LanguageEvaluator
 
 
 class CompressionApp(ttk.Window):
@@ -13,7 +14,7 @@ class CompressionApp(ttk.Window):
         # Initialize the window with a modern theme.
         super().__init__(themename="litera", *args, **kwargs)
         self.title("Huffman encoding / Steganography")
-        self.geometry("800x600")
+        self.geometry("1000x800")
 
         # Use a Notebook widget to create multiple tabs.
         self.notebook = ttk.Notebook(self)
@@ -30,6 +31,9 @@ class CompressionApp(ttk.Window):
         # Audio steganography UI
         self.build_audio_steganography_hide_form()
         self.build_audio_steganography_extract_form()
+
+        # Langage examination UI
+        self.build_language_evaluation_form()
 
     # --------------- Compression Tab ---------------
     def build_compression_form(self):
@@ -472,6 +476,59 @@ class CompressionApp(ttk.Window):
             self.audio_extract_status_label.config(text="Message extracted successfully.", bootstyle="success")
         except Exception as e:
             self.audio_extract_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
+
+    # --------------- Language Evaluation Tab ---------------
+    def build_language_evaluation_form(self):
+        self.language_frame = ttk.Frame(self.notebook, padding=20)
+        self.notebook.add(self.language_frame, text="Language evaluation")
+
+        # Language characters list file input
+        ttk.Label(self.language_frame, text="Language Characters List File:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
+        self.language_file_var = ttk.StringVar()
+        self.language_file_entry = ttk.Entry(self.language_frame, textvariable=self.language_file_var, width=40)
+        self.language_file_entry.grid(row=1, column=1, padx=5, pady=5)
+        self.browse_language_file = ttk.Button(
+            self.language_frame, text="Browse", bootstyle=PRIMARY, command=self.browse_language_list_file
+        )
+        self.browse_language_file.grid(row=1, column=2, padx=5, pady=5)
+
+        # Langugage evaluation button.
+        self.evaluate_language_button = ttk.Button(
+            self.language_frame, text="Evaluate", bootstyle=SUCCESS, command=self.evaluate_language_file
+        )
+        self.evaluate_language_button.grid(row=2, column=1, pady=10)
+
+        # Status label.
+        self.language_status_label = ttk.Label(self.language_frame, text="")
+        self.language_status_label.grid(row=3, column=0, columnspan=3, pady=5)
+
+    def browse_language_list_file(self):
+        filetypes = (("JSON files", "*.json"), ("All files", "*.*"))
+        filename = fd.askopenfilename(title="Select Language Characters List", initialdir=os.getcwd(), filetypes=filetypes)
+        if filename:
+            self.language_file_var.set(filename)
+
+    def evaluate_language_file(self):
+        language_file = self.language_file_var.get()
+        if not language_file:
+            self.comp_status_label.config(text="Please select a language characters list JSON file!", bootstyle="danger")
+            return
+        try:
+            is_valid_code = LanguageEvaluator.evaluate_language(language_file)
+
+            if is_valid_code:
+                self.language_status_label.config(
+                    text=f"The language is a valid code!",
+                    bootstyle="success"
+                )
+            else:
+                self.language_status_label.config(
+                    text=f"The language is not a valid code!",
+                    bootstyle="danger"
+                )
+        except Exception as e:
+            self.language_status_label.config(text=f"Error: {str(e)}", bootstyle="danger")
+
 
 if __name__ == "__main__":
     app = CompressionApp()
